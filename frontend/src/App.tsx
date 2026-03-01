@@ -73,6 +73,7 @@ function App() {
   const [remoteStreams, setRemoteStreams] = useState<{ [key: string]: MediaStream }>({});
   const peers = React.useRef<{ [key: string]: RTCPeerConnection }>({});
   const localStreamRef = React.useRef<MediaStream | null>(null);
+  const pendingCandidates = React.useRef<{ [key: string]: RTCIceCandidateInit[] }>({});
   const [transcripts, setTranscripts] = useState<Array<{ user: string; text: string; timestamp: string }>>([]);
   const mediaRecorder = React.useRef<MediaRecorder | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -200,13 +201,30 @@ function App() {
         const pc = peers.current[sender];
         if (signal.type === 'offer') {
           await pc.setRemoteDescription(new RTCSessionDescription(signal));
+          // Flush any buffered ICE candidates
+          const pending = pendingCandidates.current[sender] || [];
+          for (const c of pending) {
+            await pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('buffered ICE error:', e));
+          }
+          pendingCandidates.current[sender] = [];
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           roomService.sendSignal(currentRoomId, currentUser, sender, answer);
         } else if (signal.type === 'answer') {
           await pc.setRemoteDescription(new RTCSessionDescription(signal)).catch(e => console.warn(e));
+          // Flush any buffered ICE candidates
+          const pending = pendingCandidates.current[sender] || [];
+          for (const c of pending) {
+            await pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('buffered ICE error:', e));
+          }
+          pendingCandidates.current[sender] = [];
         } else if (signal.candidate) {
-          await pc.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.warn("ICE error:", e));
+          // Buffer candidate if remote description not yet set
+          if (!pc.remoteDescription) {
+            pendingCandidates.current[sender] = [...(pendingCandidates.current[sender] || []), signal];
+          } else {
+            await pc.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.warn('ICE error:', e));
+          }
         }
       });
     }, 2000);
