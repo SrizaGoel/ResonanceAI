@@ -141,22 +141,28 @@ function App() {
   // --- Room Polling ---
   useEffect(() => {
     if (!currentRoomId) return;
+    let errorCount = 0;
     const fetchRoom = async () => {
       try {
         const data = await roomService.getRoom(currentRoomId);
         if (data.error) {
-          // Room not found - likely backend restarted. Redirect cleanly.
-          setError('Session expired. The room no longer exists — please create a new room.');
-          setCurrentRoomId(null);
-          setRoom(null);
+          errorCount++;
+          // Only redirect after 3+ consecutive failures to avoid false triggers from network blips
+          if (errorCount >= 3) {
+            setError('Session expired. The room no longer exists — please create a new room.');
+            setCurrentRoomId(null);
+            setRoom(null);
+          }
           return;
         }
+        errorCount = 0; // Reset on success
         setRoom(data);
         if (data.consent_status[currentUser]) {
           setHasConsented(true);
         }
       } catch (err) {
-        setError('Failed to load room details');
+        errorCount++;
+        if (errorCount >= 5) setError('Connection lost. Please refresh the page.');
       }
     };
     fetchRoom();
@@ -248,11 +254,21 @@ function App() {
     };
     ws.onopen = () => console.log('[WS] Connected!');
     ws.onerror = (e) => console.warn('[WS] Error:', e);
-    ws.onclose = () => console.warn('[WS] Closed');
+    ws.onclose = () => console.warn('[WS] Closed - falling back to HTTP polling');
+
+    // HTTP polling fallback for when WebSocket is unavailable
+    const httpFallbackInterval = setInterval(async () => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) return; // WS working, skip
+      try {
+        const signals = await roomService.getSignals(currentRoomId, currentUser);
+        signals.forEach(async (s: any) => handleSignal(s.sender, s.signal));
+      } catch (_) { }
+    }, 2000);
 
     return () => {
       ws.close();
       wsRef.current = null;
+      clearInterval(httpFallbackInterval);
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach(t => t.stop());
       }
