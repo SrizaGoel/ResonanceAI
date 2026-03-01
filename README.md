@@ -1,8 +1,24 @@
 # ResonanceAI 
 
-An intelligent, real-time meeting analysis platform featuring facial engagement tracking, sentiment analysis, dominance scoring, and speaker transcription.
+ResonanceAI is an intelligent, real-time meeting analysis platform that transforms live conversations into structured behavioral insights.
+It combines peer-to-peer video conferencing with AI-driven engagement tracking, transcription, sentiment analysis, and productivity analytics — enabling organizations to measure communication effectiveness in real time.
 
+## Live Demo
+
+https://resonance-ai-five.vercel.app/
+
+## Core Capibilities
+
+ResonanceAI enhances digital meetings by providing:
+
+- Real-time WebRTC Mesh Video & Audio
+- Visual Engagement Tracking (Face Attention Detection)
+- Live AI Speech Transcription
+- Meeting Intelligence Dashboard
+- Confidential Mode (Privacy-first analytics)
+  
 ## Features
+
 - **Real-time WebRTC Mesh Video/Audio:** Peer-to-peer low latency communication.
 - **Visual Engagement Tracking:** Uses Google MediaPipe to track if participants are actively looking at the screen, visualizing this on a timeline.
 - **Live AI Transcriptions:** OpenAI Whisper processes audio chunks and generates transcripts.
@@ -16,7 +32,7 @@ An intelligent, real-time meeting analysis platform featuring facial engagement 
 ## Tech Stack
 - **Frontend:** React 19, Vite, TypeScript, WebRTC, MediaPipe (FaceLandmarker)
 - **Backend:** Python 3.10+, FastAPI, Whisper, PyTorch, Transformers (DistilBERT)
-- **Deployment:** Docker (Backend)
+- **Deployment:** Frontend deployed on Vercel, Backend deployed on Hugging Face Spaces (Docker-based container)
 
 ## Running Locally
 
@@ -29,7 +45,7 @@ An intelligent, real-time meeting analysis platform featuring facial engagement 
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # Or `.\.venv\Scripts\activate` on Windows
+`.\.venv\Scripts\activate` on Windows
 pip install -r requirements.txt
 python -m uvicorn main:app --reload --port 8000
 ```
@@ -40,6 +56,11 @@ cd frontend
 npm install
 npm run dev
 ```
+## Project Vision
 
-## Deployment
-The backend requires `ffmpeg` to process audio for Whisper. Because most serverless platforms do not include FFmpeg by default, the backend must be deployed using the provided `Dockerfile` (e.g., on Render, Railway, or a VPS). The frontend can be deployed easily on Vercel or Netlify.
+ResonanceAI transforms meetings into measurable intelligence.
+Instead of simply hosting conversations, it analyzes behavioral dynamics, participation balance, and communication quality — enabling data-driven collaboration in modern digital workplaces.
+
+## Team Members
+- Sriza Goel : https://github.com/SrizaGoel
+- Ranjeet Kaur : https://github.com/RanjeetKaur14
