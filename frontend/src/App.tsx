@@ -232,7 +232,12 @@ function App() {
         pendingCandidates.current[sender] = [];
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        ws.send(JSON.stringify({ sender: currentUser, target: sender, signal: answer }));
+        // Use WebSocket if open, otherwise fall back to HTTP
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ sender: currentUser, target: sender, signal: answer }));
+        } else {
+          await roomService.sendSignal(currentRoomId, currentUser, sender, answer);
+        }
       } else if (signal.type === 'answer' && pc.signalingState === 'have-local-offer') {
         await pc.setRemoteDescription(new RTCSessionDescription(signal)).catch(() => { });
         for (const c of (pendingCandidates.current[sender] || [])) {
