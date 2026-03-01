@@ -138,7 +138,13 @@ function App() {
     const fetchRoom = async () => {
       try {
         const data = await roomService.getRoom(currentRoomId);
-        if (data.error) throw new Error(data.error);
+        if (data.error) {
+          // Room not found - likely backend restarted. Redirect cleanly.
+          setError('Session expired. The room no longer exists — please create a new room.');
+          setCurrentRoomId(null);
+          setRoom(null);
+          return;
+        }
         setRoom(data);
         if (data.consent_status[currentUser]) {
           setHasConsented(true);
