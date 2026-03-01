@@ -202,9 +202,9 @@ function App() {
           await pc.setLocalDescription(answer);
           roomService.sendSignal(currentRoomId, currentUser, sender, answer);
         } else if (signal.type === 'answer') {
-          await pc.setRemoteDescription(new RTCSessionDescription(signal));
+          await pc.setRemoteDescription(new RTCSessionDescription(signal)).catch(e => console.warn(e));
         } else if (signal.candidate) {
-          await pc.addIceCandidate(new RTCIceCandidate(signal));
+          await pc.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.warn("ICE error:", e));
         }
       });
     }, 2000);
@@ -253,10 +253,14 @@ function App() {
         if (p !== currentUser && !peers.current[p]) {
           const pc = createPeerConnection(p);
           peers.current[p] = pc;
-          pc.createOffer().then(offer => {
-            pc.setLocalDescription(offer);
-            roomService.sendSignal(currentRoomId!, currentUser, p, offer);
-          });
+
+          // Polite WebRTC pairing: Only one side sends the offer to avoid "glare" collisions
+          if (currentUser > p) {
+            pc.createOffer().then(offer => {
+              pc.setLocalDescription(offer);
+              roomService.sendSignal(currentRoomId!, currentUser, p, offer);
+            });
+          }
         }
       });
     }
@@ -808,7 +812,7 @@ function App() {
 
         <div className="video-grid">
           <div className={`video-container local ${room?.last_speaker === currentUser ? 'speaking-glow' : ''}`}>
-            <video ref={v => { if (v) v.srcObject = localStream }} autoPlay muted playsInline />
+            <video ref={v => { if (v && v.srcObject !== localStream) v.srcObject = localStream }} autoPlay muted playsInline />
             <div className="video-label">You ({currentUser})</div>
             <div className="video-controls-mini">
               <button className={`btn-mute ${!isMicOn ? 'active' : ''}`} onClick={toggleMute}>
@@ -818,7 +822,7 @@ function App() {
           </div>
           {Object.entries(remoteStreams).map(([user, stream]) => (
             <div key={user} className={`video-container ${room?.last_speaker === user ? 'speaking-glow' : ''}`}>
-              <video ref={v => { if (v) v.srcObject = stream }} autoPlay playsInline muted={mutedRemoteUsers[user] || false} />
+              <video ref={v => { if (v && v.srcObject !== stream) v.srcObject = stream }} autoPlay playsInline muted={mutedRemoteUsers[user] || false} />
               <div className="video-label">{user}</div>
               <div className="video-controls-mini">
                 <button className={`btn-mute ${mutedRemoteUsers[user] ? 'active' : ''}`} onClick={() => toggleRemoteMute(user)}>
