@@ -149,7 +149,11 @@ function App() {
     };
     fetchRoom();
     const intervalId = setInterval(fetchRoom, 5000);
-    return () => clearInterval(intervalId);
+    // Keep HuggingFace Space awake (free tier sleeps after ~15min of inactivity)
+    const keepAlive = setInterval(async () => {
+      try { await axios.get('https://artisticme-resonanceai-backend.hf.space/?keepalive=1'); } catch (_) { }
+    }, 4 * 60 * 1000); // every 4 minutes
+    return () => { clearInterval(intervalId); clearInterval(keepAlive); };
   }, [currentRoomId, currentUser]);
 
   // --- WebRTC Logic ---
@@ -264,6 +268,16 @@ function App() {
     };
     pc.ontrack = (e) => {
       setRemoteStreams(prev => ({ ...prev, [targetUser]: e.streams[0] }));
+    };
+    pc.onconnectionstatechange = () => {
+      console.log(`[WebRTC] ${targetUser}: ${pc.connectionState}`);
+      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        console.warn(`[WebRTC] Connection to ${targetUser} lost. Cleaning up for reconnect...`);
+        pc.close();
+        delete peers.current[targetUser];
+        delete pendingCandidates.current[targetUser];
+        setRemoteStreams(prev => { const next = { ...prev }; delete next[targetUser]; return next; });
+      }
     };
     // Use ref to always get the latest stream (fixes stale closure bug)
     const stream = localStreamRef.current;
