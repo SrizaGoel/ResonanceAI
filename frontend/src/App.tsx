@@ -200,6 +200,15 @@ function App() {
         }
         const pc = peers.current[sender];
         if (signal.type === 'offer') {
+          const isPolite = currentUser < sender; // polite peer accepts offer, impolite ignores during glare
+          const isGlare = pc.signalingState !== 'stable';
+          if (isGlare && !isPolite) {
+            return; // impolite peer ignores incoming offer during glare
+          }
+          if (isGlare && isPolite) {
+            // Rollback our local offer so we can accept theirs
+            await pc.setLocalDescription({ type: 'rollback' }).catch(() => { });
+          }
           await pc.setRemoteDescription(new RTCSessionDescription(signal));
           // Flush any buffered ICE candidates
           const pending = pendingCandidates.current[sender] || [];
@@ -211,13 +220,16 @@ function App() {
           await pc.setLocalDescription(answer);
           roomService.sendSignal(currentRoomId, currentUser, sender, answer);
         } else if (signal.type === 'answer') {
-          await pc.setRemoteDescription(new RTCSessionDescription(signal)).catch(e => console.warn(e));
-          // Flush any buffered ICE candidates
-          const pending = pendingCandidates.current[sender] || [];
-          for (const c of pending) {
-            await pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('buffered ICE error:', e));
+          // Only apply answer if we're in the right state
+          if (pc.signalingState === 'have-local-offer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(signal)).catch(e => console.warn(e));
+            // Flush any buffered ICE candidates
+            const pending = pendingCandidates.current[sender] || [];
+            for (const c of pending) {
+              await pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('buffered ICE error:', e));
+            }
+            pendingCandidates.current[sender] = [];
           }
-          pendingCandidates.current[sender] = [];
         } else if (signal.candidate) {
           // Buffer candidate if remote description not yet set
           if (!pc.remoteDescription) {
@@ -275,11 +287,14 @@ function App() {
         if (p !== currentUser && !peers.current[p]) {
           const pc = createPeerConnection(p);
           peers.current[p] = pc;
-          // Always send the offer - both sides are now correctly guarded by !peers.current[p]
-          pc.createOffer().then(offer => {
-            pc.setLocalDescription(offer);
-            roomService.sendSignal(currentRoomId!, currentUser, p, offer);
-          });
+          // Only the alphabetically-greater user sends the initial offer (prevents glare)
+          if (currentUser > p) {
+            pc.createOffer().then(offer => {
+              pc.setLocalDescription(offer);
+              roomService.sendSignal(currentRoomId!, currentUser, p, offer);
+            });
+          }
+          // The other side creates PC and waits for the incoming offer via signaling interval
         }
       });
     }
