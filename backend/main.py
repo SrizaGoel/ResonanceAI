@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Request, HTTPException
+from fastapi import FastAPI, UploadFile, File, Request, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -75,6 +75,44 @@ class RoomModel(BaseModel):
 
 meetings = {}
 rooms = {}
+
+# --- WebSocket Connection Manager for Real-Time Signaling ---
+class ConnectionManager:
+    def __init__(self):
+        self.active: dict[str, dict[str, WebSocket]] = {}  # room_id -> {username: ws}
+
+    async def connect(self, room_id: str, username: str, ws: WebSocket):
+        await ws.accept()
+        if room_id not in self.active:
+            self.active[room_id] = {}
+        self.active[room_id][username] = ws
+        print(f"[WS] {username} connected to room {room_id}")
+
+    def disconnect(self, room_id: str, username: str):
+        if room_id in self.active:
+            self.active[room_id].pop(username, None)
+        print(f"[WS] {username} disconnected from room {room_id}")
+
+    async def send_to(self, room_id: str, target: str, data: dict):
+        if room_id in self.active and target in self.active[room_id]:
+            try:
+                await self.active[room_id][target].send_json(data)
+            except Exception:
+                pass  # client disconnected
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/{room_id}/{username}")
+async def websocket_endpoint(ws: WebSocket, room_id: str, username: str):
+    await manager.connect(room_id, username, ws)
+    try:
+        while True:
+            data = await ws.receive_json()
+            target = data.get("target")
+            if target:
+                await manager.send_to(room_id, target, data)
+    except WebSocketDisconnect:
+        manager.disconnect(room_id, username)
 
 @app.get("/")
 def home():

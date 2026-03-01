@@ -74,6 +74,7 @@ function App() {
   const peers = React.useRef<{ [key: string]: RTCPeerConnection }>({});
   const localStreamRef = React.useRef<MediaStream | null>(null);
   const pendingCandidates = React.useRef<{ [key: string]: RTCIceCandidateInit[] }>({});
+  const wsRef = React.useRef<WebSocket | null>(null);
   const [transcripts, setTranscripts] = useState<Array<{ user: string; text: string; timestamp: string }>>([]);
   const mediaRecorder = React.useRef<MediaRecorder | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -124,7 +125,12 @@ function App() {
       }
     },
     sendSignal: async (roomId: string, sender: string, target: string, signal: any) => {
-      await axios.post(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal`, { sender, target, signal });
+      // Use WebSocket if available (fast), fall back to HTTP
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({ sender, target, signal }));
+      } else {
+        await axios.post(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal`, { sender, target, signal });
+      }
     },
     getSignals: async (roomId: string, username: string) => {
       const response = await axios.get(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal/${username}?t=${Date.now()}`);
@@ -162,19 +168,16 @@ function App() {
     return () => { clearInterval(intervalId); clearInterval(keepAlive); };
   }, [currentRoomId, currentUser]);
 
-  // --- WebRTC Logic ---
+  // --- WebRTC Logic (WebSocket Signaling) ---
   useEffect(() => {
     if (!hasConsented || !currentRoomId || !currentUser) return;
 
+    // 1. Get camera/mic
     const startMedia = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: false,
-            autoGainControl: false
-          }
+          audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false }
         });
         setLocalStream(stream);
         localStreamRef.current = stream;
@@ -184,77 +187,74 @@ function App() {
     };
     startMedia();
 
-    const signalInterval = setInterval(async () => {
-      const signals = await roomService.getSignals(currentRoomId, currentUser);
-      signals.forEach(async (s: any) => {
-        const { sender, signal } = s;
-        if (signal.type === 'engagement') {
-          setEngagementStatuses(prev => {
-            if (prev[sender] !== signal.isEngaged) {
-              setEngagementHistory(hist => ({
-                ...hist,
-                [sender]: [...(hist[sender] || []), { timestamp: Date.now(), isEngaged: signal.isEngaged }]
-              }));
-            }
-            return { ...prev, [sender]: signal.isEngaged };
-          });
-          return;
+    // 2. Connect WebSocket for instant signaling
+    const wsUrl = `wss://artisticme-resonanceai-backend.hf.space/ws/${currentRoomId}/${currentUser}`;
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+    console.log('[WS] Connecting to', wsUrl);
+
+    const handleSignal = async (sender: string, signal: any) => {
+      if (signal.type === 'engagement') {
+        setEngagementStatuses(prev => {
+          if (prev[sender] !== signal.isEngaged) {
+            setEngagementHistory(hist => ({
+              ...hist,
+              [sender]: [...(hist[sender] || []), { timestamp: Date.now(), isEngaged: signal.isEngaged }]
+            }));
+          }
+          return { ...prev, [sender]: signal.isEngaged };
+        });
+        return;
+      }
+      if (signal.type === 'micStatus') {
+        setMicStatuses(prev => ({ ...prev, [sender]: signal.isMicOn }));
+        return;
+      }
+
+      // WebRTC signal
+      if (!peers.current[sender]) {
+        peers.current[sender] = createPeerConnection(sender);
+      }
+      const pc = peers.current[sender];
+
+      if (signal.type === 'offer') {
+        await pc.setRemoteDescription(new RTCSessionDescription(signal));
+        // Flush buffered candidates
+        for (const c of (pendingCandidates.current[sender] || [])) {
+          await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => { });
         }
-        if (signal.type === 'micStatus') {
-          setMicStatuses(prev => ({ ...prev, [sender]: signal.isMicOn }));
-          return;
+        pendingCandidates.current[sender] = [];
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        ws.send(JSON.stringify({ sender: currentUser, target: sender, signal: answer }));
+      } else if (signal.type === 'answer' && pc.signalingState === 'have-local-offer') {
+        await pc.setRemoteDescription(new RTCSessionDescription(signal)).catch(() => { });
+        for (const c of (pendingCandidates.current[sender] || [])) {
+          await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => { });
         }
-        if (!peers.current[sender]) {
-          const pc = createPeerConnection(sender);
-          peers.current[sender] = pc;
+        pendingCandidates.current[sender] = [];
+      } else if (signal.candidate) {
+        if (!pc.remoteDescription) {
+          pendingCandidates.current[sender] = [...(pendingCandidates.current[sender] || []), signal];
+        } else {
+          await pc.addIceCandidate(new RTCIceCandidate(signal)).catch(() => { });
         }
-        const pc = peers.current[sender];
-        if (signal.type === 'offer') {
-          const isPolite = currentUser < sender; // polite peer accepts offer, impolite ignores during glare
-          const isGlare = pc.signalingState !== 'stable';
-          if (isGlare && !isPolite) {
-            return; // impolite peer ignores incoming offer during glare
-          }
-          if (isGlare && isPolite) {
-            // Rollback our local offer so we can accept theirs
-            await pc.setLocalDescription({ type: 'rollback' }).catch(() => { });
-          }
-          await pc.setRemoteDescription(new RTCSessionDescription(signal));
-          // Flush any buffered ICE candidates
-          const pending = pendingCandidates.current[sender] || [];
-          for (const c of pending) {
-            await pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('buffered ICE error:', e));
-          }
-          pendingCandidates.current[sender] = [];
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          roomService.sendSignal(currentRoomId, currentUser, sender, answer);
-        } else if (signal.type === 'answer') {
-          // Only apply answer if we're in the right state
-          if (pc.signalingState === 'have-local-offer') {
-            await pc.setRemoteDescription(new RTCSessionDescription(signal)).catch(e => console.warn(e));
-            // Flush any buffered ICE candidates
-            const pending = pendingCandidates.current[sender] || [];
-            for (const c of pending) {
-              await pc.addIceCandidate(new RTCIceCandidate(c)).catch(e => console.warn('buffered ICE error:', e));
-            }
-            pendingCandidates.current[sender] = [];
-          }
-        } else if (signal.candidate) {
-          // Buffer candidate if remote description not yet set
-          if (!pc.remoteDescription) {
-            pendingCandidates.current[sender] = [...(pendingCandidates.current[sender] || []), signal];
-          } else {
-            await pc.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.warn('ICE error:', e));
-          }
-        }
-      });
-    }, 2000);
+      }
+    };
+
+    ws.onmessage = (event) => {
+      const { sender, signal } = JSON.parse(event.data);
+      handleSignal(sender, signal);
+    };
+    ws.onopen = () => console.log('[WS] Connected!');
+    ws.onerror = (e) => console.warn('[WS] Error:', e);
+    ws.onclose = () => console.warn('[WS] Closed');
 
     return () => {
-      clearInterval(signalInterval);
-      if (localStream) {
-        localStream.getTracks().forEach(t => t.stop());
+      ws.close();
+      wsRef.current = null;
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
       }
     };
   }, [hasConsented, currentRoomId, currentUser]);
