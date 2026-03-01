@@ -156,7 +156,14 @@ function App() {
 
     const startMedia = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
         setLocalStream(stream);
       } catch (err) {
         console.error("Media access failed", err);
@@ -211,7 +218,15 @@ function App() {
   }, [hasConsented, currentRoomId, currentUser]);
 
   const createPeerConnection = (targetUser: string) => {
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' }
+      ]
+    });
     pc.onicecandidate = (e) => {
       if (e.candidate) roomService.sendSignal(currentRoomId!, currentUser, targetUser, e.candidate);
     };
