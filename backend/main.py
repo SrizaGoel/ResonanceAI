@@ -16,9 +16,12 @@ import math
 from datetime import datetime, timedelta
 
 # --- FFmpeg Configuration (Mandatory for Whisper) ---
-FFMPEG_PATH = r"C:\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin"
-if FFMPEG_PATH not in os.environ["PATH"]:
-    os.environ["PATH"] += os.pathsep + FFMPEG_PATH
+# Check if we are running locally on Windows vs inside Linux Docker
+import platform
+if platform.system() == "Windows":
+    FFMPEG_PATH = r"C:\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin"
+    if FFMPEG_PATH not in os.environ.get("PATH", ""):
+        os.environ["PATH"] += os.pathsep + FFMPEG_PATH
 
 app = FastAPI(title="ResonanceAI Simplified")
 

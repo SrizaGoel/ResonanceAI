@@ -1,0 +1,82 @@
+# ResonanceAI System Architecture & Tech Stack
+
+This document serves as a complete breakdown of the technologies and libraries used to build the ResonanceAI Simplified application, and how its key features actually work under the hood.
+
+## 1. Complete Tech Stack Overview
+
+The application follows a monolithic client-server architecture split into a modern React frontend and an AI-powered Python backend.
+
+### **Backend Stack (Python 3.10+)**
+The backend acts as an API server, WebRTC signaling server, and AI processing engine.
+*   **Frameworks & Servers**:
+    *   `fastapi` (v0.111.0+): A modern, fast web framework for building APIs. Used for routing, HTTP requests, and CORS middleware.
+    *   `uvicorn[standard]` (v0.30.1+): The Lightning-fast ASGI web server implementation that runs the FastAPI application.
+    *   `python-multipart`: Required by FastAPI to handle incoming form data (specifically, decoding the audio `.webm` files uploaded by the frontend).
+*   **AI & Machine Learning**:
+    *   `openai-whisper`: OpenAI's open-source speech recognition model (specifically using the `"tiny"` model) for transcribing audio to text locally.
+    *   `transformers`: Hugging Face's library for state-of-the-art NLP. It loads a pre-trained `distilbert-base-uncased-finetuned-sst-2-english` model to perform neural sentiment analysis on transcripts.
+    *   `torch`: PyTorch, the core deep learning framework required to run both Whisper and DistilBERT.
+    *   `textblob`: A lightweight natural language processing library used as a "fallback" sentiment analysis engine if a sentence is too short for the neural model or if the neural model faults.
+    *   `scipy`: Mathematical algorithms dependency often required by the underlying audio processing stack.
+*   **System Dependencies & Deployment**:
+    *   **Docker**: Used to containerize the backend environment. Essential for deployment because standard cloud providers do not include FFmpeg natively. The [Dockerfile](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/backend/Dockerfile) ensures the Python environment and system-level FFmpeg binaries are built together identically across any host.
+    *   **FFmpeg**: A cross-platform solution to record, convert and stream audio and video. Whisper requires this installed on the OS to process the temporary uploaded audio files.
+
+### **Frontend Stack (TypeScript / React)**
+The frontend is a single-page application focused on high-performance media handling and responsive UI.
+*   **Core Frameworks**:
+    *   `react` & `react-dom` (v19.2.0): The core UI rendering library utilizing modern React Hooks (`useState`, `useEffect`, `useRef`).
+    *   `vite` & `@vitejs/plugin-react` (v7.3.1): A highly optimized build tool and development server that provides rapid Hot Module Replacement (HMR).
+    *   `typescript` (~5.9.3): Provides static typing for robust state management ([RoomData](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/frontend/src/App.tsx#24-53), [RoomSettings](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/backend/main.py#50-56) interfaces).
+    *   `react-router-dom` (v7.13.0): Configured for client-side routing (though currently, view swapping is handled conditionally in [App.tsx](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/frontend/src/App.tsx)).
+*   **UI & Styling**:
+    *   Vanilla CSS ([index.css](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/frontend/src/index.css), [room.css](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/frontend/src/room.css)): Modern custom CSS using variables, flexbox, grid, and CSS animations (like the pulsing speaker ring and timeline layout).
+    *   `lucide-react` (v0.575.0): A comprehensive and clean SVG icon library used for nearly all visual indicators (Mic, Video, Eye, Shield, Activity).
+*   **Web APIs & Calling**:
+    *   `axios` (v1.13.5): A promise-based HTTP client used to seamlessly send JSON data and `FormData` (audio blobs) to the FastAPI backend.
+    *   **Native WebRTC APIs**: Uses `RTCPeerConnection`, `RTCIceCandidate`, and `RTCSessionDescription` to create peer-to-peer video/audio connections directly between users.
+    *   **Native Media Devices API**: Uses `navigator.mediaDevices.getUserMedia` to access the user's webcam and microphone, and `MediaRecorder` to capture audio.
+*   **Local AI Processing**:
+    *   `@mediapipe/tasks-vision` (v0.10.32): Google's machine learning library compiled to WebAssembly (WASM). It runs the `FaceLandmarker` model entirely within the user's browser to analyze the webcam feed.
+
+---
+
+## 2. Deep Dive: How Each Feature Works
+
+### Feature A: Room Creation, State, and Settings
+*   **How it works**: 
+    1. A user enters their name and creates a room on the frontend. `axios` sends a POST request with initial settings to `/create-meeting`.
+    2. The backend generates a UUID (`uuid4()`), initializes a [RoomModel](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/backend/main.py#57-72) (storing state like `participants`, `talk_times`, `emotion_history` in a Python dictionary), and returns the ID.
+    3. The frontend begins a polling loop using `setInterval`, fetching `/api/rooms/{id}` every 5 seconds. This keeps the frontend UI completely synced with the "source of truth" on the backend, updating the participant list and active settings.
+    4. The Host can toggle settings (e.g., "Auto Analyze"). This calls `/settings`, mutating the backend state, which then propogates to all clients on their next poll.
+
+### Feature B: Real-time Video and Audio (WebRTC)
+*   **How it works**:
+    1. Once a user joins, the browser prompts for camera/mic access (`getUserMedia`) and saves the `MediaStream`.
+    2. The app uses a **Mesh Topology**. It iterates over all known `room.participants`. If it isn't the local user, it creates an `RTCPeerConnection`.
+    3. To connect, browsers need to exchange connectivity data (SDP offers/answers and ICE candidates). Instead of a WebSocket, the app uses **HTTP Polling** as a signaling server. Every 2 seconds, it checks `/api/rooms/{id}/signal/{username}` for new connection data.
+    4. Once signals are successfully exchanged through the backend, the browsers connect *directly* to each other, resulting in the `<video srcObject={stream} />` elements lighting up.
+
+### Feature C: Visual Engagement Tracking (The Timeline & Eye Icons)
+*   **How it works**:
+    1. **Detection (Local)**: The frontend loads the MediaPipe `FaceLandmarker` WASM model. An invisible `<video>` element plays the local webcam. Using `requestAnimationFrame` (limited to every 2 seconds for performance), it passes the video frame to the AI. If `result.faceLandmarks.length > 0`, the AI sees a face, meaning "Engaged".
+    2. **Signaling (P2P-ish)**: When the engagement status changes, the frontend uses the same signaling endpoint (`/signal`) to broadcast a custom JSON message: `{ type: 'engagement', isEngaged: true/false }` to every other participant.
+    3. **Rendering**: The frontend maintains an `engagementHistory` array of timestamps. The Dashboard's timeline iterates through these timestamps and calculates the CSS `width: %` for Red (Away) or Blue (Engaged) flexbox elements relative to the meeting's total duration.
+
+### Feature D: Audio Recording & AI Transcription
+*   **How it works**:
+    1. **Recording (Local)**: If "Auto Analyze" is ON, the frontend's `MediaRecorder` records the `localStream` (user's mic). Every 5 seconds, it stops, triggering the [ondataavailable](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/frontend/src/App.tsx#331-334) event.
+    2. **Upload**: The 5-second audio chunk is converted to a WebM Blob and sent to the backend `/upload` via `axios/FormData`.
+    3. **Transcription (Backend)**: The backend receives the file, saves it to `/temp_audio`, and immediately passes the file path to `whisper.load_model("tiny").transcribe()`. Whisper decodes the audio and returns text.
+    4. **Storage**: The text is appended to `room.transcripts` with a timestamp. The frontend's polling loop fetches this, rendering the live transcript panel.
+
+### Feature E: Meeting Intelligence (Emotions, Dominance, Confidence)
+*   **How it works**: This is calculated on the backend during the `/upload` transcription process.
+    1. **Talk Time & Turns**: The backend analyzes Whisper's output segments. It calculates the duration (`segment["end"] - segment["start"]`) and adds it to the user's `talk_times`. If the `username` is different from `last_speaker`, it increments their `turns` count.
+    2. **Neural Sentiment**: The transcribed text is passed to the Hugging Face `sentiment-analysis` pipeline (DistilBERT). "POSITIVE" labels yield a positive float, "NEGATIVE" yields negative. This is saved to `emotion_history`. The frontend plots this over an SVG `<polyline>` using coordinates mapped from the last 20 scores.
+    3. **Confidence Scoring**: A custom algorithm grades the speaker:
+        *   It evaluates Whisper's AI certainty (`avg_logprob`).
+        *   It evaluates fluency/pauses (`no_speech_prob`).
+        *   It calculates Words Per Minute (WPM) by dividing the word count by the segment duration.
+        *   It penalizes filler words ("um", "uh", "like").
+    4. **Dominance Index**: Calculated mathematically: [(0.6 * Talk_Time_Percentage) + (0.4 * Turns_Percentage)](file:///c:/Users/Sriza%20Goel/OneDrive/Desktop/MyProjects/ResonanceAI/simplified_app/frontend/src/App.tsx#54-1101). This is sent via the `/api/rooms` polling endpoint and rendered as CSS bar graphs in the dashboard.
