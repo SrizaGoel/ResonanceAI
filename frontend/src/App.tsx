@@ -95,7 +95,7 @@ function App() {
       return response.data;
     },
     getRoom: async (roomId: string) => {
-      const response = await api.get(`/${roomId}`);
+      const response = await api.get(`/${roomId}?t=${Date.now()}`);
       return response.data;
     },
     updateSettings: async (roomId: string, settings: any) => {
@@ -114,7 +114,7 @@ function App() {
     },
     getTranscript: async (roomId: string) => {
       try {
-        const response = await axios.get(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/transcript`);
+        const response = await axios.get(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/transcript?t=${Date.now()}`);
         return response.data.transcripts || [];
       } catch (err) {
         console.error("Transcript fetch error:", err);
@@ -125,7 +125,7 @@ function App() {
       await axios.post(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal`, { sender, target, signal });
     },
     getSignals: async (roomId: string, username: string) => {
-      const response = await axios.get(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal/${username}`);
+      const response = await axios.get(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal/${username}?t=${Date.now()}`);
       return response.data.signals;
     }
   };
