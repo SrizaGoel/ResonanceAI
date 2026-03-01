@@ -160,8 +160,8 @@ function App() {
           video: true,
           audio: {
             echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true
+            noiseSuppression: false,
+            autoGainControl: false
           }
         });
         setLocalStream(stream);
