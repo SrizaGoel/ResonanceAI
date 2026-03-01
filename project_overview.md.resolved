@@ -1,0 +1,71 @@
+# ResonanceAI: The Ultimate Project & Tech Stack Guide
+
+This is the exhaustive "Master Guide" to the ResonanceAI project. It covers every single layer of the application, from the server-side code to the browser APIs.
+
+---
+
+## 🛠️ The Global Tech Stack
+
+### 🟦 Frontend: The User Interface (`/frontend`)
+
+| Technology / Library | Role in Project | Notable Alternatives | Why we chose it? |
+| :--- | :--- | :--- | :--- |
+| **React (v19)** | The core UI framework. Manages the "State" (like whether the camera is on or if you are in a room). | Vue, Angular, Svelte | Industry standard for complex, state-driven apps. |
+| **Vite** | The build tool and development server. It bundles all our code into a single file for the browser. | Webpack, Parcel | Significantly faster than Webpack. Instant code updates (HMR). |
+| **TypeScript** | Adds "types" to our JavaScript (e.g., ensuring a `roomId` is always a `string`). | JavaScript | Prevents "silent" bugs and makes the code much easier to read/write. |
+| **Axios** | A library for making HTTP requests to the backend. | Fetch API | Automatically handles JSON and has better error-handling than the native `fetch`. |
+| **Lucide React** | The icon library (Shield, Play, Users icons). | FontAwesome, Remix Icons | Lightweight, customizable, and has a very modern "SaaS" look. |
+| **React Router Dom** | Handles the navigation between the Landing Page and the Room Page. | TanStack Router | The most stable and widely used routing library for React. |
+| **Vanilla CSS** | All the styling, animations, and layouts. | TailwindCSS, Sass, MUI | Pure performance. It gives us 100% control over the "Glassmorphism" design. |
+
+---
+
+### 🟩 Backend: The Server Engine (`/backend`)
+
+| Technology / Library | Role in Project | Notable Alternatives | Why we chose it? |
+| :--- | :--- | :--- | :--- |
+| **Python (3.11+)** | The programming language. | Node.js, Go, Rust | Best-in-class for future AI integration (Whisper, GPT, etc.). |
+| **FastAPI** | The web framework. Handles our API routes (URLs). | Flask, Django | High-speed, supports "Async" (handling many users at once), and very modern. |
+| **Uvicorn** | The server that runs the Python code. | Hypercorn, Gunicorn | The industry-standard server for FastAPI apps. |
+| **Pydantic** | Validates the data coming from the frontend (e.g., ensures names isn't empty). | Marshmallow | Extremely fast and built directly into FastAPI. |
+| **Python-Multipart** | Allows the server to handle form data and file uploads. | Native streams | Required by FastAPI for handling complex request formats. |
+| **UUID (Standard Lib)** | Generates the unique, random Room Codes (like `8f3b-..`). | Incremental IDs | Essential for privacy; UUIDs are impossible to "guess." |
+| **Datetime (Standard Lib)** | Adds timestamps to rooms (capturing when a meeting was created). | Arrow, Pendulum | Built-in and reliable for standard timestamping. |
+
+---
+
+### 🌐 Browser APIs (Native "Magic")
+
+We didn't just use libraries; we tapped into the **Browser's built-in superpowers**:
+
+1.  **WebRTC API (`RTCPeerConnection`)**:
+    *   **Role**: Enables peer-to-peer video/audio.
+    *   **Alternative**: External SDKs like Twilio or Zoom (expensive).
+    *   **Benefit**: Private, free, and very fast.
+2.  **MediaDevices API (`getUserMedia`)**:
+    *   **Role**: This is the prompt that pops up asking for permission to use your Camera and Mic.
+3.  **Clipboard API**:
+    *   **Role**: Used when you click the Room Code to copy it instantly.
+4.  **SessionStorage**:
+    *   **Role**: Remembers your "Username" so if you refresh the page, you don't have to re-enter it.
+    *   **Alternative**: LocalStorage (permanent), Cookies (bulky).
+
+---
+
+## 📂 File-by-File "Quick Guide"
+
+### **Backend Folder**
+*   `main.py`: **The Control Center.** Everything the server "knows" (rooms, participants, signals) is written here.
+*   `requirements.txt`: **The Instruction Manual.** Tells Python which tools to install.
+
+### **Frontend Folder**
+*   `App.tsx`: **The Heart.** 90% of the logic resides here. If you want to see how the video connects, look for `createPeerConnection`.
+*   `index.css`: **The Visual Identity.** All the colors, blurs, and cool pulsing effects.
+*   `room.css`: **The Blueprint.** Defines where the sidebar sits and how the video grid expands.
+*   `package.json`: **The Project ID.** Lists all the libraries and the commands (like `npm run dev`) used to run it.
+
+---
+
+> [!IMPORTANT]
+> **Summary for the Beginner**:
+> We used **React** to draw the screen, **FastAPI** to connect people together, and **WebRTC** to send the actual video data. No huge corporate APIs—just pure, modern web technology!

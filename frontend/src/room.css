@@ -1,0 +1,1059 @@
+/* Room Page Styles */
+.room-layout {
+    display: flex;
+    height: 100vh;
+    background-color: var(--bg-dark);
+}
+
+.room-sidebar {
+    width: 350px;
+    background-color: var(--bg-card);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.room-header-brand {
+    margin-bottom: 2rem;
+}
+
+.room-info-card {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.room-id-box .label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.id-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.id-display:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-mute {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-mute:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-mute.active {
+    background: var(--error);
+    border-color: var(--error);
+    color: white;
+}
+
+.sidebar-section {
+    margin-bottom: 2.5rem;
+}
+
+.sidebar-section h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+/* Toggles */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.setting-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.setting-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+
+.setting-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle.active .slider {
+    background-color: var(--primary);
+}
+
+.toggle.active input:checked+.slider:before {
+    transform: translateX(20px);
+}
+
+.toggle.disabled {
+    opacity: 0.5;
+}
+
+.toggle.disabled .slider {
+    cursor: not-allowed;
+}
+
+.host-notice {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.participant-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.participant-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s;
+}
+
+.participant-list li:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.participant-list li.host {
+    background: rgba(79, 70, 229, 0.05);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.participant-list li.host .avatar {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.participant-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.participant-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.participant-header .name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.participant-icons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.participant-metrics-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+}
+
+.badge {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--primary);
+    color: #fff;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+/* Day 16: Professional Mood Badges */
+.mood-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.mood-positive {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.mood-neutral {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.mood-tense {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Day 16: Speaking Indicator */
+.speaking-glow {
+    position: relative;
+    box-shadow: 0 0 0 2px var(--primary);
+    transition: box-shadow 0.3s ease;
+}
+
+.avatar.speaking-glow::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    bottom: -4px;
+    left: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    animation: speakerPulse 1.5s infinite;
+}
+
+@keyframes speakerPulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+.video-container.speaking-glow {
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+}
+
+/* Main Content */
+.room-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.active-speaker-area {
+    text-align: center;
+    max-width: 600px;
+    z-index: 10;
+}
+
+.pulsing-orb {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+    margin: 0 auto 3rem;
+    animation: pulse 4s infinite ease-in-out;
+    opacity: 0.5;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.3;
+    }
+}
+
+.active-speaker-area h2 {
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.active-speaker-area p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    background: var(--bg-dark);
+}
+
+/* --- Intelligence Panels --- */
+.transcript-panel {
+    width: 100%;
+    max-height: 140px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.transcript-header {
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+}
+
+.transcript-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.empty-message {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.transcript-entry {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.transcript-entry .timestamp {
+    color: var(--text-muted);
+    font-family: monospace;
+    font-size: 0.7rem;
+}
+
+.transcript-entry .user {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.transcript-entry .text {
+    color: #fff;
+}
+
+.transcript-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.transcript-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+/* Day 7: Speaker Analytics */
+.analytics-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+}
+
+.analytics-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.analytics-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+}
+
+.analytics-info .name {
+    color: #fff;
+    font-weight: 500;
+}
+
+.analytics-info .time {
+    color: var(--primary);
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.progress-bar-bg {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Day 9: Room Status Card (Bottom Right Floating) */
+.room-status-card {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    min-width: 200px;
+}
+
+.status-room-id {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.status-room-id .label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+}
+
+.status-room-id code {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.4rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Day 11: Insights Dashboard Modal */
+.dashboard-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.dashboard-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2rem;
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    padding: 2.5rem;
+    overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    position: relative;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.75rem;
+    color: #fff;
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+}
+
+.dashboard-card h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+}
+
+/* Charts */
+.chart-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.pie-chart {
+    width: 160px;
+    height: 160px;
+    transform: rotate(-90deg);
+}
+
+.chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 120px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.legend-item .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-item .label {
+    flex: 1;
+}
+
+/* Bar Chart */
+.bar-chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.bar-label {
+    width: 70px;
+    font-size: 0.8rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bar-wrapper {
+    flex: 1;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 0.5rem;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 5px;
+}
+
+.bar-value {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.formula-hint {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 1.5rem;
+    font-style: italic;
+    opacity: 0.6;
+}
+
+/* Silent Users */
+.silent-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.silent-list li {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.success-text {
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+/* Day 12 & 13: Emotion & Confidence Styles */
+.emotion-preview {
+    font-size: 1.1rem;
+    cursor: help;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.emotion-preview:hover {
+    transform: scale(1.4);
+}
+
+.participant-metrics {
+    margin-top: 0.25rem;
+    opacity: 0.8;
+}
+
+.conf-badge {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Mood Trend Graph */
+.trend-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.trend-graph {
+    width: 100%;
+    height: 120px;
+    overflow: visible;
+}
+
+.trend-polyline {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 8px var(--primary));
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine 2s ease-out forwards;
+}
+
+@keyframes drawLine {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.mood-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* Day 15: Host & Privacy Styles */
+.host-notice {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 1rem;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.badge {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 0.4rem;
+}
+
+/* Day 15.5: Premium Toggle Switches */
+.custom-toggle {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+
+.custom-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .3s;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked+.toggle-slider {
+    background-color: var(--primary);
+}
+
+input:checked+.toggle-slider:before {
+    transform: translateX(16px);
+}
+
+/* Report Button */
+.btn-download {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-download:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+}
+
+/* Day 17: Professional Print/PDF Report Styles */
+@media print {
+    body {
+        background: white !important;
+        color: #1e293b !important;
+    }
+
+    .sidebar,
+    .video-grid,
+    .action-bar,
+    .dashboard-overlay,
+    .btn,
+    .host-notice,
+    .settings-list,
+    .meeting-id-pill,
+    .insights-btn,
+    .close-btn {
+        display: none !important;
+    }
+
+    .print-report-container {
+        display: block !important;
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .report-header {
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .report-header h1 {
+        color: #4f46e5;
+        margin: 0;
+        font-size: 1.5rem;
+    }
+
+    .report-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .report-card {
+        padding: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+    }
+
+    .report-card h3 {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .report-card .value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+    }
+
+    th {
+        text-align: left;
+        background: #f8fafc;
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        font-size: 0.85rem;
+        color: #475569;
+    }
+
+    td {
+        padding: 0.75rem;
+        border: 1px solid #e2e8f0;
+        font-size: 0.85rem;
+    }
+
+    .report-timeline {
+        margin-top: 2rem;
+    }
+
+    .timeline-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .timeline-user {
+        font-weight: 700;
+        color: #4f46e5;
+        font-size: 0.85rem;
+    }
+
+    .timeline-time {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+    }
+
+    .timeline-text {
+        margin-top: 0.25rem;
+        color: #334155;
+        line-height: 1.5;
+    }
+
+    .metric-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        background: #f1f5f9;
+        border-radius: 4px;
+        margin-left: 0.5rem;
+    }
+}
+
+.print-report-container {
+    display: none;
+}
