@@ -5,7 +5,7 @@ import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import './index.css';
 import './room.css';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/rooms';
+const API_BASE_URL = 'https://artisticme-resonanceai-backend.hf.space/api/rooms';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -87,7 +87,7 @@ function App() {
   // --- API Services ---
   const roomService = {
     createRoom: async (host: string, settings?: any) => {
-      const response = await axios.post('http://127.0.0.1:8000/create-meeting', { host, settings });
+      const response = await axios.post('https://artisticme-resonanceai-backend.hf.space/create-meeting', { host, settings });
       return response.data;
     },
     joinRoom: async (roomId: string, username: string) => {
@@ -109,12 +109,12 @@ function App() {
     uploadAudio: async (roomId: string, username: string, blob: Blob) => {
       const formData = new FormData();
       formData.append('file', blob);
-      const response = await axios.post(`http://127.0.0.1:8000/api/rooms/${roomId}/upload?username=${username}`, formData);
+      const response = await axios.post(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/upload?username=${username}`, formData);
       return response.data;
     },
     getTranscript: async (roomId: string) => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/rooms/${roomId}/transcript`);
+        const response = await axios.get(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/transcript`);
         return response.data.transcripts || [];
       } catch (err) {
         console.error("Transcript fetch error:", err);
@@ -122,10 +122,10 @@ function App() {
       }
     },
     sendSignal: async (roomId: string, sender: string, target: string, signal: any) => {
-      await axios.post(`http://127.0.0.1:8000/api/rooms/${roomId}/signal`, { sender, target, signal });
+      await axios.post(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal`, { sender, target, signal });
     },
     getSignals: async (roomId: string, username: string) => {
-      const response = await axios.get(`http://127.0.0.1:8000/api/rooms/${roomId}/signal/${username}`);
+      const response = await axios.get(`https://artisticme-resonanceai-backend.hf.space/api/rooms/${roomId}/signal/${username}`);
       return response.data.signals;
     }
   };
