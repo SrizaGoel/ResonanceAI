@@ -72,6 +72,7 @@ function App() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<{ [key: string]: MediaStream }>({});
   const peers = React.useRef<{ [key: string]: RTCPeerConnection }>({});
+  const localStreamRef = React.useRef<MediaStream | null>(null);
   const [transcripts, setTranscripts] = useState<Array<{ user: string; text: string; timestamp: string }>>([]);
   const mediaRecorder = React.useRef<MediaRecorder | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -165,6 +166,7 @@ function App() {
           }
         });
         setLocalStream(stream);
+        localStreamRef.current = stream;
       } catch (err) {
         console.error("Media access failed", err);
       }
@@ -233,8 +235,10 @@ function App() {
     pc.ontrack = (e) => {
       setRemoteStreams(prev => ({ ...prev, [targetUser]: e.streams[0] }));
     };
-    if (localStream) {
-      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    // Use ref to always get the latest stream (fixes stale closure bug)
+    const stream = localStreamRef.current;
+    if (stream) {
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
     }
     return pc;
   };
@@ -253,14 +257,11 @@ function App() {
         if (p !== currentUser && !peers.current[p]) {
           const pc = createPeerConnection(p);
           peers.current[p] = pc;
-
-          // Polite WebRTC pairing: Only one side sends the offer to avoid "glare" collisions
-          if (currentUser > p) {
-            pc.createOffer().then(offer => {
-              pc.setLocalDescription(offer);
-              roomService.sendSignal(currentRoomId!, currentUser, p, offer);
-            });
-          }
+          // Always send the offer - both sides are now correctly guarded by !peers.current[p]
+          pc.createOffer().then(offer => {
+            pc.setLocalDescription(offer);
+            roomService.sendSignal(currentRoomId!, currentUser, p, offer);
+          });
         }
       });
     }
